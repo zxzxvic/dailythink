@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>每日灵感随记 - MindFlowing</title>
+    <style>
+        :root {
+            --primary: #7c4dff;
+            --bg: #f5f7fb;
+            --card-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        * {
+            box-sizing: border-box;
+            font-family: 'Segoe UI', system-ui;
+        }
+        body {
+            margin: 0;
+            padding: 2rem;
+            background: var(--bg);
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        .input-section {
+            background: white;
+            padding: 2rem;
+            border-radius: 12px;
+            box-shadow: var(--card-shadow);
+            margin-bottom: 2rem;
+        }
+        textarea {
+            width: 100%;
+            height: 120px;
+            padding: 1rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            resize: vertical;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        .btn {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        .btn:hover {
+            opacity: 0.9;
+        }
+        .search-box {
+            width: 100%;
+            padding: 12px;
+            margin: 1rem 0;
+            border: 2px solid #eee;
+            border-radius: 8px;
+        }
+        .notes-list {
+            display: grid;
+            gap: 1rem;
+        }
+        .note-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 8px;
+            box-shadow: var(--card-shadow);
+            position: relative;
+        }
+        .note-date {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .tools {
+            margin-top: 1rem;
+            display: flex;
+            gap: 1rem;
+            justify-content: space-between;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📝 MindFlowing</h1>
+            <p>让灵感自然流动</p>
+        </div>
+
+        <div class="input-section">
+            <textarea id="content" placeholder="记录此刻的想法...（支持换行输入）"></textarea>
+            <div class="tools">
+                <button class="btn" onclick="saveNote()">保存记录</button>
+                <input type="text" class="search-box" placeholder="搜索关键词..." oninput="filterNotes(this.value)">
+                <button class="btn" onclick="exportNotes()">导出数据</button>
+            </div>
+        </div>
+
+        <div class="notes-list" id="notesList"></div>
+    </div>
+
+    <script>
+        // 初始化本地存储
+        let notes = JSON.parse(localStorage.getItem('notes')) || [];
+
+        // 渲染笔记列表
+        function renderNotes(filterText = '') {
+            const list = document.getElementById('notesList');
+            list.innerHTML = notes
+                .filter(note => note.content.includes(filterText))
+                .map((note, index) => `
+                    <div class="note-card">
+                        <div class="note-date">${new Date(note.timestamp).toLocaleString()}</div>
+                        <div class="note-content">${note.content.replace(/\n/g, '<br>')}</div>
+                    </div>
+                `).join('');
+        }
+
+        // 保存新笔记
+        function saveNote() {
+            const content = document.getElementById('content').value.trim();
+            if (!content) return;
+
+            const newNote = {
+                content,
+                timestamp: Date.now()
+            };
+            notes.unshift(newNote);
+            localStorage.setItem('notes', JSON.stringify(notes));
+            document.getElementById('content').value = '';
+            renderNotes();
+        }
+
+        // 搜索过滤
+        function filterNotes(keyword) {
+            renderNotes(keyword);
+        }
+
+        // 导出数据
+        function exportNotes() {
+            const dataStr = JSON.stringify(notes, null, 2);
+            const blob = new Blob([dataStr], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `mindflowing_${new Date().toISOString().slice(0,10)}.json`;
+            a.click();
+        }
+
+        // 初始化渲染
+        renderNotes();
+    </script>
+</body>
+</html>
